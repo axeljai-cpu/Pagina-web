@@ -33,6 +33,8 @@ ESTUDIO = {
     "email": "info@estudiojcs.com.ar",
     "telefonos": [("+54 9 11 5178-5782", "+5491151785782"), ("+54 9 11 2296-1982", "+5491122961982")],
     "horario": "Lunes a viernes de 9:00 a 17:00 hs.",
+    "direccion": "Lavelle y Talcahuano",
+    "ciudad": "Ciudad Autónoma de Buenos Aires",
     "whatsapp": "5491151785782",
     "whatsapp_texto": "Hola, quisiera realizar una consulta jurídica.",
 }
@@ -42,19 +44,17 @@ GTM_ID = ""
 # ruta a una imagen .webp (por ejemplo "/assets/img/hero.webp").
 HERO_FOTO = None
 
+MAPA = "https://www.google.com/maps/search/?api=1&query=Lavelle+y+Talcahuano%2C+Ciudad+Aut%C3%B3noma+de+Buenos+Aires"
 WA = "https://wa.me/{}?text={}".format(
     ESTUDIO["whatsapp"], "Hola%2C%20quisiera%20realizar%20una%20consulta%20jur%C3%ADdica.")
 
-# Equipo (página El Estudio). Para sumar integrantes, agregá elementos.
-# Los textos entre corchetes son espacios a completar por el estudio.
-EQUIPO = [
-    {"nombre": "[Nombre] Jaikin", "cargo": "[Cargo]", "area": "[Especialización]",
-     "bio": "[Breve descripción profesional.]", "foto": "/assets/img/equipo/jaikin.svg", "linkedin": ""},
-    {"nombre": "[Nombre] Carabajal", "cargo": "[Cargo]", "area": "[Especialización]",
-     "bio": "[Breve descripción profesional.]", "foto": "/assets/img/equipo/carabajal.svg", "linkedin": ""},
-    {"nombre": "[Nombre] Santoro", "cargo": "[Cargo]", "area": "[Especialización]",
-     "bio": "[Breve descripción profesional.]", "foto": "/assets/img/equipo/santoro.svg", "linkedin": ""},
-]
+# Equipo (página El Estudio).
+# Mientras EQUIPO esté vacío se muestra un bloque genérico con los apellidos
+# de los socios. Para mostrar perfiles individuales, agregá diccionarios con:
+#   {"nombre": "...", "cargo": "...", "area": "...", "bio": "...",
+#    "foto": "/assets/img/equipo/archivo.webp", "linkedin": ""}
+EQUIPO = []
+SOCIOS = ["Jaikin", "Carabajal", "Santoro"]
 
 PROCESO = [
     ("Escuchamos", "Nos contás qué pasó y qué necesitás lograr."),
@@ -109,6 +109,7 @@ WA_ICON = '<svg class="i-wa" viewBox="0 0 24 24" aria-hidden="true"><path fill="
 PHONE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>'
 MAIL_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 6l8.5 7 8.5-7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
 CLOCK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+PIN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
 LI_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 10v7M7 7v.01M11 17v-4a2 2 0 0 1 4 0v4M11 10v7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
 
 
@@ -167,9 +168,11 @@ def schema_estudio():
         "logo": SITE + "/assets/img/logo.png",
         "image": SITE + "/assets/img/og-image.jpg",
         "email": ESTUDIO["email"],
+        "hasMap": MAPA,
         "telephone": ESTUDIO["telefonos"][0][1],
         "priceRange": "$$",
-        "address": {"@type": "PostalAddress", "addressLocality": "Ciudad Autónoma de Buenos Aires",
+        "address": {"@type": "PostalAddress", "streetAddress": ESTUDIO["direccion"],
+                    "addressLocality": "Ciudad Autónoma de Buenos Aires",
                     "addressRegion": "Buenos Aires", "addressCountry": "AR"},
         "areaServed": [{"@type": "City", "name": "Ciudad Autónoma de Buenos Aires"},
                        {"@type": "State", "name": "Provincia de Buenos Aires"}],
@@ -349,7 +352,7 @@ def footer(p):
     <div class="footer__brand">
       <a href="/" aria-label="Inicio">{logo}</a>
       <p>Derecho Civil y Comercial · Laboral · Familia · Consorcios y Expensas</p>
-      <p>Buenos Aires, Argentina</p>
+      <p><a href="{mapa}" target="_blank" rel="noopener">{dir}<br>{ciudad}</a></p>
     </div>
     <div>
       <p class="footer__title">Contacto</p>
@@ -385,7 +388,7 @@ def footer(p):
         c1=btn("/contacto/" if p.get("noform") else "#contacto", "Consultar ahora", "light"), c2=btn_wa("Hablar con un abogado"), logo=logo("logo--light"),
         tels=tel_links(), email=ESTUDIO["email"], horario=e(ESTUDIO["horario"]), wa=WA, areas=areas,
         servicios=servicios, cats="".join('<li><a href="{}">{}</a></li>'.format(url_categoria(k), e(c["nombre"])) for k, c in CATEGORIAS.items()),
-        year=date.today().year, wa_icon=WA_ICON,
+        year=date.today().year, wa_icon=WA_ICON, mapa=MAPA, dir=e(ESTUDIO["direccion"]), ciudad=e(ESTUDIO["ciudad"]),
     )
 
 
@@ -480,6 +483,7 @@ def form_block(motivo=None, titulo="Contanos tu caso", lead="Completá el formul
         <li>{phone}<div><span class="label">Teléfonos</span>{tels}</div></li>
         <li>{mail}<div><span class="label">Email</span><a href="mailto:{email}" data-track="email">{email}</a></div></li>
         <li>{clock}<div><span class="label">Horario</span><span>{horario}</span></div></li>
+        <li>{pin}<div><span class="label">Dirección</span><a href="{mapa}" target="_blank" rel="noopener">{dir}, CABA</a></div></li>
       </ul>
       <div class="reveal">{wa}</div>
     </div>
@@ -509,7 +513,8 @@ def form_block(motivo=None, titulo="Contanos tu caso", lead="Completá el formul
   </div>
 </section>""".format(h=h_tag, titulo=titulo, lead=e(lead), phone=PHONE_ICON, tels=tel_links(), mail=MAIL_ICON,
                      email=ESTUDIO["email"], clock=CLOCK_ICON, horario=e(ESTUDIO["horario"]),
-                     wa=btn_wa("Escribinos por WhatsApp"), opts="".join(opts), arrow=ARROW, wa_url=WA, wa_icon=WA_ICON)
+                     wa=btn_wa("Escribinos por WhatsApp"), opts="".join(opts), arrow=ARROW, wa_url=WA, wa_icon=WA_ICON,
+                     pin=PIN_ICON, mapa=MAPA, dir=e(ESTUDIO["direccion"]))
 
 
 def service_card(slug, num=None):
@@ -988,9 +993,9 @@ def build_estudio():
   <div class="container">
     <div class="split-head">
       <div><p class="kicker reveal">Equipo</p><h2 id="equipo-title" class="reveal">Jaikin, Carabajal <em>&amp; Santoro</em></h2></div>
-      <p class="lead reveal">Las personas que acompañan cada consulta.</p>
+      <p class="lead reveal">Un equipo de abogados que trabaja de manera coordinada para acompañar cada consulta, con un trato directo y cercano.</p>
     </div>
-    <div class="team">{team}</div>
+    {team}
   </div>
 </section>
 <section class="section" aria-labelledby="areas-title">
@@ -1000,7 +1005,10 @@ def build_estudio():
   </div>
 </section>
 {form}
-""".format(pil=pil, proceso=proceso_block(dark=False), team="".join(team_card(m) for m in EQUIPO), areas=areas, form=form_block())
+""".format(pil=pil, proceso=proceso_block(dark=False), team=('<div class="team">{}</div>'.format("".join(team_card(m) for m in EQUIPO)) if EQUIPO else
+                '<ul class="partners">{}</ul>'.format("".join(
+                    '<li class="partner reveal"><span class="partner__l" aria-hidden="true">{}</span><span class="partner__name">{}</span></li>'.format(n[0], e(n))
+                    for n in SOCIOS))), areas=areas, form=form_block())
     write(p, body)
 
 
@@ -1159,7 +1167,7 @@ def build_simple():
     body = """<section class="page-hero page-hero--compact"><div class="container">{bc}<p class="kicker">Legal</p><h1>Política de Privacidad</h1></div></section>
 <section class="section is-white"><div class="container container--narrow prose">
   <h2>Responsable</h2>
-  <p>Estudio J, C &amp; S (Jaikin, Carabajal &amp; Santoro), con domicilio en <span class="placeholder">[completar domicilio]</span>, Ciudad Autónoma de Buenos Aires. Contacto: <a href="mailto:{email}">{email}</a>.</p>
+  <p>Estudio J, C &amp; S (Jaikin, Carabajal &amp; Santoro), con domicilio en {dir}, Ciudad Autónoma de Buenos Aires. Contacto: <a href="mailto:{email}">{email}</a>.</p>
   <h2>Datos que recopilamos</h2>
   <p>Solo los datos que nos enviás voluntariamente al completar el formulario o al contactarnos: nombre, email, teléfono, motivo de consulta y mensaje. También registramos la página desde la que nos escribiste y, si llegaste desde una campaña, su origen.</p>
   <h2>Finalidad</h2>
@@ -1172,7 +1180,7 @@ def build_simple():
   <h2>Cookies y medición</h2>
   <p>Este sitio no utiliza cookies propias. Si en el futuro se incorporan herramientas de medición o publicidad, esta política se actualizará para informarlo.</p>
   <p class="note">Última actualización: {hoy}.</p>
-</div></section>""".format(bc=breadcrumb(crumbs), email=ESTUDIO["email"], hoy=date.today().strftime("%d/%m/%Y"))
+</div></section>""".format(bc=breadcrumb(crumbs), email=ESTUDIO["email"], hoy=date.today().strftime("%d/%m/%Y"), dir=e(ESTUDIO["direccion"]))
     write(p, body)
 
     # Gracias

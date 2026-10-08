@@ -504,6 +504,14 @@ p { margin: 0 0 1em; }
 .member__li { display: inline-flex; gap: 8px; align-items: center; margin-top: 10px; font-weight: 600; color: var(--night); text-decoration: none; }
 .member__li svg { width: 18px; height: 18px; }
 
+.partners { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+@media (min-width: 760px) { .partners { grid-template-columns: repeat(3, 1fr); } }
+.partner { display: flex; align-items: center; gap: 22px; padding: 28px 24px; background: var(--paper); }
+@media (min-width: 760px) { .partner { flex-direction: column; align-items: flex-start; gap: 28px; padding: 40px 32px; } }
+.partner__l { font-family: var(--serif); font-weight: 700; font-size: clamp(64px, 9vw, 120px); line-height: .8; color: var(--ink); padding-right: 20px; border-right: 1px solid var(--line); }
+@media (min-width: 760px) { .partner__l { padding: 0 0 28px; border-right: 0; border-bottom: 1px solid var(--line); width: 100%; } }
+.partner__name { font-family: var(--serif); font-size: 28px; color: var(--ink); }
+.footer__brand a[href*="maps"] { display: inline; margin: 0; }
 .area-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 @media (min-width: 760px) { .area-links { grid-template-columns: 1fr 1fr; } }
 .area-links a { display: grid; gap: 6px; padding: 26px 24px; background: var(--white); border: 1px solid var(--line); border-radius: var(--r); text-decoration: none; transition: border-color .25s; }

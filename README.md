@@ -77,8 +77,9 @@ Sumá un elemento a `ARTICULOS`. Para enlazar un servicio dentro del texto usá
 
 ### Equipo
 
-Editá la lista `EQUIPO` en `tools/build.py`. Las fotos van en
-`sitio/assets/img/equipo/` (ideal `.webp`, 800 × 1000 px).
+Hoy se muestra un bloque genérico con los apellidos de los socios. Para pasar
+a perfiles individuales, completá la lista `EQUIPO` en `tools/build.py`; las
+fotos van en `sitio/assets/img/equipo/` (ideal `.webp`, 800 × 1000 px).
 
 ### Foto del hero
 
@@ -95,12 +96,13 @@ Guardá la imagen en `sitio/assets/img/hero.webp` y en `tools/build.py` cambiá
   email de cada consulta.
 - Para una landing con motivo preseleccionado: `/contacto/?motivo=Sucesión`.
 
-## Pendiente de completar
+## Datos del estudio
 
-- Nombres, cargos, especializaciones, descripciones, fotos y LinkedIn del equipo.
-- Domicilio del estudio (Política de Privacidad y, si se desea, datos
-  estructurados).
-- Fotografía editorial para el hero (opcional).
+- Dirección: Lavelle y Talcahuano, Ciudad Autónoma de Buenos Aires (se muestra
+  en contacto, pie de página, Política de Privacidad y datos estructurados).
+- Equipo: bloque genérico con los apellidos de los socios. Para mostrar perfiles
+  individuales, completá la lista `EQUIPO` (ver más arriba).
+- Hero: composición con el monograma del logo.
 
 Tipografías: Bodoni Moda y Hanken Grotesk (SIL Open Font License), alojadas en
 el propio sitio.
