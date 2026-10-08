@@ -12,7 +12,7 @@
  */
 
 $DESTINO   = 'info@estudiojcs.com.ar';
-$REMITENTE = 'web@estudiojcs.com.ar';
+$REMITENTE = 'info@estudiojcs.com.ar';
 
 header('X-Content-Type-Options: nosniff');
 

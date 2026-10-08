@@ -41,8 +41,9 @@ formulario con el motivo de consulta ya seleccionado. Datos estructurados:
 
 1. Subí **todo el contenido** de `sitio/` a `public_html`, incluido el archivo
    oculto `.htaccess`.
-2. Creá la casilla `web@estudiojcs.com.ar` en Hostinger: es el remitente que usa
-   `enviar.php` para enviar las consultas a `info@estudiojcs.com.ar`.
+2. Las consultas del formulario se envían a `info@estudiojcs.com.ar`, usando esa
+   misma casilla como remitente (configurable en `sitio/enviar.php`). Al
+   responder el email, la respuesta va directo a quien hizo la consulta.
 3. Con el SSL activo, habilitá la redirección a HTTPS en `.htaccess`.
 4. Enviá `https://estudiojcs.com.ar/sitemap.xml` en Google Search Console.
 5. Creá o actualizá el Perfil de Empresa de Google con los mismos datos de
