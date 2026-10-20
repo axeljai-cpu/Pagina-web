@@ -39,7 +39,7 @@ ESTUDIO = {
     "whatsapp_texto": "Hola, quisiera realizar una consulta jurídica.",
 }
 # ID de Google Tag Manager (por ejemplo "GTM-XXXXXXX"). Vacío = sin analítica.
-GTM_ID = ""
+GTM_ID = "GTM-NWPZN5J3"
 # Foto del hero: dejá None para usar la composición tipográfica, o indicá la
 # ruta a una imagen .webp (por ejemplo "/assets/img/hero.webp").
 HERO_FOTO = None
@@ -226,6 +226,7 @@ def head(p):
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  {gtm}
   <title>{title}</title>
   <meta name="description" content="{desc}">
   <meta name="robots" content="{robots}">
@@ -250,7 +251,6 @@ def head(p):
   <link rel="stylesheet" href="/assets/css/styles.css?v={v}">
   <script>document.documentElement.classList.add('js');</script>
   <script src="/assets/js/main.js?v={v}" defer></script>
-  {gtm}
   {schemas}
 </head>""".format(title=e(p["title"]), desc=e(p["description"]), robots=robots, url=url, og_type=og_type,
                    site=SITE, extra_og=extra_og, v=VERSION, gtm=gtm, schemas=schemas)
@@ -1178,7 +1178,7 @@ def build_simple():
   <p>Podés solicitar el acceso, la rectificación, la actualización o la supresión de tus datos escribiendo a <a href="mailto:{email}">{email}</a>, conforme a la Ley 25.326 de Protección de los Datos Personales.</p>
   <p>La Agencia de Acceso a la Información Pública, en su carácter de Órgano de Control de la Ley N.º 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales.</p>
   <h2>Cookies y medición</h2>
-  <p>Este sitio no utiliza cookies propias. Si en el futuro se incorporan herramientas de medición o publicidad, esta política se actualizará para informarlo.</p>
+  <p>Este sitio utiliza Google Tag Manager y herramientas de medición de Google, como Google Analytics, que pueden usar cookies para obtener estadísticas de uso del sitio y medir la efectividad de las campañas. Esa información no nos permite identificarte personalmente. Podés bloquear o eliminar las cookies desde la configuración de tu navegador.</p>
   <p class="note">Última actualización: {hoy}.</p>
 </div></section>""".format(bc=breadcrumb(crumbs), email=ESTUDIO["email"], hoy=date.today().strftime("%d/%m/%Y"), dir=e(ESTUDIO["direccion"]))
     write(p, body)

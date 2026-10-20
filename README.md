@@ -88,7 +88,7 @@ Guardá la imagen en `sitio/assets/img/hero.webp` y en `tools/build.py` cambiá
 
 ### Campañas y medición
 
-- Completá `GTM_ID` en `tools/build.py` para activar Google Tag Manager.
+- Google Tag Manager está activo con el contenedor `GTM-NWPZN5J3` (`GTM_ID` en `tools/build.py`).
 - El sitio envía al `dataLayer` los eventos `consulta_enviada`,
   `contacto_whatsapp`, `contacto_telefono` y `contacto_email`.
 - La página `/gracias/` permite medir conversiones de formularios.
