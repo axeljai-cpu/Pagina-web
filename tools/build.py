@@ -19,6 +19,7 @@ from html import escape as e
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from contenido_servicios import AREAS, SERVICIOS, MOTIVOS, FAQ_INICIO  # noqa: E402
 from contenido_articulos import ARTICULOS, CATEGORIAS  # noqa: E402
+from contenido_herramientas import CALCULADORA, SUCESION, ACTUALIZACION  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "sitio")
 VERSION = date.today().strftime("%Y%m%d")
@@ -69,6 +70,26 @@ DISCLAIMER = "La información de esta página es general y no reemplaza el anál
 # ---------------------------------------------------------------------------
 # URLs
 # ---------------------------------------------------------------------------
+URL_CALC = "/{}/".format(CALCULADORA["slug"])
+URL_SUC = "/{}/".format(SUCESION["slug"])
+
+# Herramientas que se suman al menú de cada área
+EXTRA_NAV = {
+    "laboral": [(URL_CALC, "Calculadora de indemnización")],
+    "familia": [(URL_SUC, "¿Cuánto cuesta una sucesión?")],
+}
+
+# Destacado de herramienta en páginas de servicio y artículos: slug -> (url, título, texto, botón)
+HERRAMIENTA_SERVICIO = {
+    "despidos": (URL_CALC, "Calculá tu indemnización por despido",
+                 "Usá nuestra calculadora actualizada con la Ley Bases y después revisamos tu liquidación.", "Calcular mi indemnización"),
+    "art-accidentes-de-trabajo": (URL_CALC + "#art", "Calculá la indemnización de la ART",
+                                  "Estimá cuánto corresponde por tu incapacidad y después revisamos tu caso.", "Calcular indemnización ART"),
+    "sucesiones": (URL_SUC, "¿Cuánto cuesta una sucesión?",
+                   "Costos, plazos, cuándo es obligatoria y qué es el tracto abreviado, explicado con claridad.", "Ver costos y plazos"),
+}
+
+
 def url_area(k):
     return "/{}/".format(AREAS[k]["slug"])
 
@@ -252,9 +273,11 @@ def head(p):
   <link rel="stylesheet" href="/assets/css/styles.css?v={v}">
   <script>document.documentElement.classList.add('js');</script>
   <script src="/assets/js/main.js?v={v}" defer></script>
+  {extra_js}
   {schemas}
 </head>""".format(title=e(p["title"]), desc=e(p["description"]), robots=robots, url=url, og_type=og_type,
-                   site=SITE, extra_og=extra_og, v=VERSION, gtm=gtm, schemas=schemas)
+                   site=SITE, extra_og=extra_og, v=VERSION, gtm=gtm, schemas=schemas,
+                   extra_js="".join('<script src="{}?v={}" defer></script>'.format(js, VERSION) for js in p.get("scripts", [])))
 
 
 def nav_html(current):
@@ -266,6 +289,7 @@ def nav_html(current):
         if a.get("destacado"):
             subs.insert(subs.index("constitucion-de-sociedades") + 1, a["destacado"])
         sub = "".join('<li><a href="{}">{}</a></li>'.format(url_servicio(s), e(SERVICIOS[s].get("nombre_largo", SERVICIOS[s]["nombre"]))) for s in subs)
+        sub += "".join('<li><a href="{}">{}</a></li>'.format(u, e(t)) for u, t in EXTRA_NAV.get(k, []))
         cur = ' aria-current="page"' if current == k else ""
         items.append(
             '<li class="has-sub"><a href="{u}"{cur}>{n}</a>'
@@ -282,6 +306,7 @@ def mobile_nav():
         a = AREAS[k]
         subs = list(a["servicios"]) + ([a["destacado"]] if a.get("destacado") else [])
         sub = "".join('<li><a href="{}">{}</a></li>'.format(url_servicio(s), e(SERVICIOS[s].get("nombre_largo", SERVICIOS[s]["nombre"]))) for s in subs)
+        sub += "".join('<li><a href="{}">{}</a></li>'.format(u, e(t)) for u, t in EXTRA_NAV.get(k, []))
         blocks.append('<li><a class="m-top" href="{}">{}</a><ul class="m-sub">{}</ul></li>'.format(url_area(k), e(a["menu"]), sub))
     blocks.append('<li><a class="m-top" href="/el-estudio/">El Estudio</a></li>')
     blocks.append('<li><a class="m-top" href="/informacion-juridica/">Información jurídica</a></li>')
@@ -870,6 +895,16 @@ def build_area(k):
     write(p, body)
 
 
+def tool_band(slug):
+    t = HERRAMIENTA_SERVICIO.get(slug)
+    if not t:
+        return ""
+    url, titulo, texto, boton = t
+    return """<section class="section section--tight" aria-label="Herramienta">
+  <div class="container">{}</div>
+</section>""".format(cta_band(e(titulo), texto, btn(url, boton, "accent"), dark=True))
+
+
 def build_servicio(slug):
     s = SERVICIOS[slug]
     a = AREAS[s["area"]]
@@ -932,6 +967,7 @@ def build_servicio(slug):
     <div class="prose reveal">{intro}</div>
   </div>
 </section>
+{herramienta}
 {beneficios}
 {situaciones}
 {proceso}
@@ -950,6 +986,7 @@ def build_servicio(slug):
 {related}
 {form}
 """.format(nombre=e(nombre), intro=intro, beneficios=beneficios, situaciones=situaciones,
+           herramienta=tool_band(slug),
            proceso=proceso_block(s.get("pasos"), "Cómo es <em>el proceso</em>" if s.get("pasos") else "Cómo trabajamos"),
            c=consultar(s["motivo"], s["cta"], "primary"), docs=docs,
            faq=faq_block(s["faqs"], "Preguntas sobre {}".format(e(low(nombre)))),
@@ -1131,6 +1168,7 @@ def build_articulo(a):
     <div class="container article__grid">
       <div class="prose article__body">
         {cuerpo}
+        {tool}
         <p class="note">{disc}</p>
       </div>
       <aside class="article__aside">
@@ -1157,7 +1195,10 @@ def build_articulo(a):
            us=url_servicio(a["servicio"]), sn=e(low(s.get("nombre_largo", s["nombre"]))),
            c=consultar(s["motivo"], "Contanos tu caso", "accent").replace('class="btn', 'class="btn btn--block', 1),
            w=btn_wa("WhatsApp", "outline btn--block"), otros="".join(article_card(x) for x in otros[:3]),
-           form=form_block(s["motivo"]))
+           form=form_block(s["motivo"]),
+           tool=(cta_band(e(HERRAMIENTA_SERVICIO[a["servicio"]][1]), HERRAMIENTA_SERVICIO[a["servicio"]][2],
+                          btn(HERRAMIENTA_SERVICIO[a["servicio"]][0], HERRAMIENTA_SERVICIO[a["servicio"]][3], "accent"), dark=True)
+                 if a["servicio"] in HERRAMIENTA_SERVICIO else ""))
     write(p, body)
 
 
@@ -1210,6 +1251,215 @@ def build_simple():
     write(p, body)
 
 
+def build_calculadora():
+    c = CALCULADORA
+    path = URL_CALC
+    a = AREAS["laboral"]
+    crumbs = [("Inicio", "/"), (a["nombre"], url_area("laboral")), ("Calculadora de indemnización", path)]
+    p = {"path": path, "current": "laboral", "title": c["title"], "description": c["description"],
+         "scripts": ["/assets/js/calculadora.js"],
+         "schemas": [schema_estudio(), schema_breadcrumb(crumbs), schema_faq(c["faqs"]),
+                     {"@context": "https://schema.org", "@type": "WebApplication", "name": "Calculadora de indemnización por despido y ART",
+                      "url": SITE + path, "applicationCategory": "FinanceApplication", "operatingSystem": "Web",
+                      "inLanguage": "es-AR", "isAccessibleForFree": True,
+                      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "ARS"},
+                      "provider": {"@id": SITE + "/#estudio"}}]}
+
+    def money_field(name, label, hint="", required=True, placeholder="Ej.: 1.500.000"):
+        h = '<span class="field__hint">{}</span>'.format(hint) if hint else ""
+        return ('<div class="field"><label for="c-{n}">{l}</label><input id="c-{n}" name="{n}" type="text" inputmode="decimal" '
+                'autocomplete="off" placeholder="{ph}"{r}>{h}</div>').format(n=name, l=label, ph=placeholder, r=" required" if required else "", h=h)
+
+    rubros = "".join('<li class="reveal"><h3>{}</h3><p>{}</p></li>'.format(e(t), e(d)) for t, d in c["rubros"])
+    cambios = "".join("<li>{}</li>".format(e(x)) for x in c["cambios"])
+    result_cta = ('<div class="calc-result__cta"><a class="btn btn--wa btn--block" data-wa-result data-track="whatsapp" href="{wa}" '
+                  'target="_blank" rel="noopener">{ic} {txt}</a>{c}</div>')
+
+    body = page_hero(crumbs, "Herramienta gratuita · Derecho Laboral", e(c["h1"]), c["lead"],
+                     btn("#calculadora", "Calcular ahora", "accent") + '<a class="btn btn--outline" href="#art">Calcular indemnización ART</a>',
+                     hero_aside()) + """
+<section class="section calc-section" id="calculadora" aria-labelledby="calc-title">
+  <div class="container">
+    <div class="section-head"><p class="kicker">Calculadora</p><h2 id="calc-title">Calculá tu <em>indemnización</em></h2>
+      <p class="lead">Completá los datos y obtené un detalle de cada rubro. Es una estimación en montos brutos: la revisamos con vos sin compromiso.</p></div>
+    <div class="calc">
+      <div class="calc-tabs" role="tablist" aria-label="Tipo de cálculo">
+        <button type="button" role="tab" id="tab-despido" data-calc-tab="despido" aria-controls="panel-despido" aria-selected="true">Despido sin causa</button>
+        <button type="button" role="tab" id="tab-art" data-calc-tab="art" aria-controls="panel-art" aria-selected="false" tabindex="-1">Accidente de trabajo (ART)</button>
+      </div>
+
+      <div class="calc-panel" id="panel-despido" role="tabpanel" aria-labelledby="tab-despido" data-calc-panel="despido">
+        <form class="calc-form" data-calc="despido" novalidate>
+          <div class="calc-grid">
+            <div class="field"><label for="c-ingreso">Fecha de ingreso</label><input id="c-ingreso" name="ingreso" type="date" required></div>
+            <div class="field"><label for="c-egreso">Fecha del despido</label><input id="c-egreso" name="egreso" type="date" required></div>
+            {f_sueldo}
+            <div class="field"><label for="c-preaviso">¿Te avisaron el despido con anticipación (preaviso)?</label>
+              <select id="c-preaviso" name="preaviso"><option value="no">No, me despidieron sin preaviso</option><option value="si">Sí, me dieron preaviso</option></select></div>
+            <div class="field"><label for="c-vacaciones">Días de vacaciones de este año que ya te tomaste</label><input id="c-vacaciones" name="vacaciones" type="number" min="0" step="1" value="0" inputmode="numeric"></div>
+            {f_tope}
+          </div>
+          <p class="calc-error" role="alert" data-calc-error hidden></p>
+          <button class="btn btn--primary btn--block" type="submit">Calcular indemnización {arrow}</button>
+        </form>
+        <div class="calc-result" data-result="despido" hidden aria-live="polite">
+          <p class="calc-result__kicker">Resultado estimado</p>
+          <p class="calc-result__total" data-total></p>
+          <p class="calc-result__meta" data-antiguedad></p>
+          <p class="calc-result__warn" data-prueba hidden>El despido ocurrió durante el período de prueba: en general no corresponde la indemnización por antigüedad.</p>
+          <table class="calc-table"><caption class="visually-hidden">Detalle por rubro</caption><tbody></tbody></table>
+          <p class="calc-result__note">Montos brutos. No incluye multas, agravamientos ni rubros adeudados de meses anteriores. El resultado puede variar según tu convenio colectivo y tu situación particular.</p>
+          {cta_d}
+        </div>
+      </div>
+
+      <div class="calc-panel" id="panel-art" role="tabpanel" aria-labelledby="tab-art" data-calc-panel="art" hidden>
+        <form class="calc-form" data-calc="art" novalidate>
+          <div class="calc-grid">
+            {f_ibm}
+            <div class="field"><label for="c-edad">Tu edad al momento del accidente</label><input id="c-edad" name="edad" type="number" min="16" max="99" step="1" inputmode="numeric" placeholder="Ej.: 40" required></div>
+            <div class="field"><label for="c-incapacidad">Porcentaje de incapacidad (%)</label><input id="c-incapacidad" name="incapacidad" type="number" min="1" max="100" step="0.5" inputmode="decimal" placeholder="Ej.: 15" required><span class="field__hint">Lo determina la comisión médica. Si no lo sabés, probá con un valor estimado.</span></div>
+            <div class="field"><label for="c-lugar">¿Dónde ocurrió el accidente?</label>
+              <select id="c-lugar" name="lugar"><option value="trabajo">En el lugar de trabajo o por el trabajo</option><option value="itinere">En el trayecto entre casa y trabajo (in itinere)</option></select></div>
+          </div>
+          <p class="calc-error" role="alert" data-calc-error hidden></p>
+          <button class="btn btn--primary btn--block" type="submit">Calcular indemnización ART {arrow}</button>
+        </form>
+        <div class="calc-result" data-result="art" hidden aria-live="polite">
+          <p class="calc-result__kicker">Resultado estimado</p>
+          <p class="calc-result__total" data-total></p>
+          <p class="calc-result__warn" data-total66 hidden>Con una incapacidad del 66 % o más se considera total: además de este monto pueden corresponder compensaciones adicionales de pago único que no están incluidas.</p>
+          <p class="calc-result__warn" data-itinere hidden>En los accidentes in itinere no corresponde el adicional del 20 %.</p>
+          <table class="calc-table"><caption class="visually-hidden">Detalle por rubro</caption><tbody></tbody></table>
+          <p class="calc-result__note">Estimación con la fórmula general. La ley fija montos mínimos que se actualizan periódicamente: si el resultado es menor, corresponde el mínimo vigente. No incluye las prestaciones por días de baja ni las médicas.</p>
+          {cta_a}
+        </div>
+      </div>
+    </div>
+    <p class="note">Actualizada en {act}. Información general: no reemplaza el análisis profesional de tu caso.</p>
+  </div>
+</section>
+
+<section class="section is-white" aria-labelledby="como-title">
+  <div class="container">
+    <div class="section-head"><p class="kicker reveal">Cómo se calcula</p><h2 id="como-title" class="reveal">Qué incluye la <em>indemnización por despido</em></h2>
+      <p class="lead reveal">Ante un despido sin causa, la liquidación final suma varios rubros. Estos son los principales que considera la calculadora.</p></div>
+    <ul class="detail-grid">{rubros}</ul>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="ley-title">
+  <div class="container docs">
+    <div>
+      <p class="kicker reveal">Nueva ley</p>
+      <h2 id="ley-title" class="reveal">Qué cambió con la <em>Ley Bases</em></h2>
+      <p class="reveal">La Ley 27.742 modificó varias reglas de la Ley de Contrato de Trabajo. Para despidos posteriores a su vigencia, estos son los cambios que más impactan en la liquidación.</p>
+      <div class="btn-row reveal" style="margin-top:28px">{c_desp}</div>
+    </div>
+    <ul class="checklist reveal">{cambios}</ul>
+  </div>
+</section>
+
+<section class="section section--tight" aria-label="Revisión de liquidación">
+  <div class="container">{band}</div>
+</section>
+{faq}
+{form}
+""".format(
+        f_sueldo=money_field("sueldo", "Mejor remuneración mensual bruta del último año ($)", "El sueldo bruto más alto de los últimos 12 meses, sin aguinaldo."),
+        f_tope=money_field("tope", "Tope del convenio colectivo ($) <span class=\"opt\">(opcional)</span>", "Si no lo sabés, dejalo vacío.", False, "Opcional"),
+        f_ibm=money_field("ibm", "Ingreso mensual promedio del último año ($)", "Promedio de tus sueldos brutos de los 12 meses anteriores al accidente."),
+        arrow=ARROW,
+        cta_d=result_cta.format(wa=WA, ic=WA_ICON, txt="Revisamos tu liquidación por WhatsApp", c=consultar("Despido", "Consultar por un despido", "outline")),
+        cta_a=result_cta.format(wa=WA, ic=WA_ICON, txt="Revisamos tu caso de ART por WhatsApp", c=consultar("ART / accidente de trabajo", "Consultar por un accidente", "outline")),
+        act=ACTUALIZACION, rubros=rubros, cambios=cambios,
+        c_desp=btn(url_servicio("despidos"), "Abogado laboral para despidos", "outline"),
+        band=cta_band("¿Tu liquidación no coincide con este cálculo?", "Revisamos tu liquidación final y te explicamos si te pagaron lo que corresponde.",
+                      btn_wa("Revisamos tu liquidación") + consultar("Despido", "Contanos tu caso", "outline"), dark=True),
+        faq=faq_block(c["faqs"], "Preguntas sobre la <em>indemnización</em>"),
+        form=form_block("Despido", "Revisamos tu <em>liquidación</em>"))
+    write(p, body)
+
+
+def build_guia_sucesion():
+    g = SUCESION
+    path = URL_SUC
+    a = AREAS["familia"]
+    crumbs = [("Inicio", "/"), (a["nombre"], url_area("familia")), ("Sucesiones", url_servicio("sucesiones")),
+              ("¿Cuánto cuesta una sucesión?", path)]
+    p = {"path": path, "current": "familia", "title": g["title"], "description": g["description"],
+         "schemas": [schema_estudio(), schema_breadcrumb(crumbs), schema_faq(g["faqs"]),
+                     {"@context": "https://schema.org", "@type": "Article", "headline": g["h1"], "description": g["description"],
+                      "inLanguage": "es-AR", "mainEntityOfPage": SITE + path, "image": SITE + "/assets/img/og-image.jpg",
+                      "author": {"@id": SITE + "/#estudio"}, "publisher": {"@id": SITE + "/#estudio"}}]}
+    wa_pres = "https://wa.me/{}?text={}".format(ESTUDIO["whatsapp"], "Hola%2C%20quisiera%20pedir%20un%20presupuesto%20para%20una%20sucesi%C3%B3n.")
+    btn_pres = '<a class="btn btn--wa" href="{}" target="_blank" rel="noopener" data-track="whatsapp">{} Pedí un presupuesto por WhatsApp</a>'.format(wa_pres, WA_ICON)
+    costos = "".join('<li class="reveal"><h3>{}</h3><p>{}</p></li>'.format(e(t), e(d)) for t, d in g["costos"])
+    factores = "".join("<li>{}</li>".format(e(x)) for x in g["factores"])
+    etapas = [(t, d) for t, d in g["etapas"]]
+    faq_map = dict(g["faqs"])
+
+    body = page_hero(crumbs, "Guía · Sucesiones", e(g["h1"]), g["lead"],
+                     btn_pres + consultar("Sucesión", "Pedir presupuesto", "outline"), hero_aside()) + """
+<section class="section" aria-labelledby="resumen-title">
+  <div class="container intro">
+    <div><p class="kicker reveal">En pocas palabras</p><h2 id="resumen-title" class="reveal">El costo depende de <em>los bienes</em></h2></div>
+    <div class="prose reveal">
+      <p>No hay un precio único: el costo de una sucesión depende sobre todo del valor de los bienes que se heredan, porque la tasa de justicia y los honorarios se calculan en función de ese valor.</p>
+      <p>A eso se suman algunos gastos fijos, como la publicación de edictos, los informes registrales y la inscripción de los bienes. Con los datos de tu caso te pasamos un presupuesto por escrito, para que sepas desde el principio cuánto vas a pagar.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section is-white" aria-labelledby="costos-title">
+  <div class="container">
+    <div class="section-head"><p class="kicker reveal">Costos</p><h2 id="costos-title" class="reveal">¿Qué gastos tiene <em>una sucesión?</em></h2></div>
+    <ul class="detail-grid">{costos}</ul>
+    {band1}
+  </div>
+</section>
+
+<section class="section" aria-labelledby="factores-title">
+  <div class="container docs">
+    <div>
+      <p class="kicker reveal">Cuánto cuesta una sucesión de una casa</p>
+      <h2 id="factores-title" class="reveal">Qué hace variar <em>el costo</em></h2>
+      <p class="reveal">{casa}</p>
+    </div>
+    <ul class="checklist reveal">{factores}</ul>
+  </div>
+</section>
+
+{etapas}
+
+<section class="section is-white" aria-labelledby="oblig-title">
+  <div class="container">
+    <div class="section-head"><p class="kicker reveal">Preguntas clave</p><h2 id="oblig-title" class="reveal">Obligatoriedad, plazos y <em>tracto abreviado</em></h2></div>
+    <ul class="detail-grid detail-grid--2">
+      <li class="reveal"><h3>¿Es obligatorio hacer la sucesión?</h3><p>{oblig}</p></li>
+      <li class="reveal"><h3>¿Cuánto tarda?</h3><p>{tarda}</p></li>
+      <li class="reveal"><h3>¿Qué es el tracto abreviado?</h3><p>{tracto}</p></li>
+      <li class="reveal"><h3>¿Se puede vender sin sucesión?</h3><p>{vender}</p></li>
+    </ul>
+    {band2}
+  </div>
+</section>
+{faq}
+{form}
+""".format(costos=costos, factores=factores, casa=e(faq_map["¿Cuánto cuesta una sucesión de una casa?"]),
+           etapas=proceso_block(etapas, "Cómo es <em>el trámite</em>", "Etapas de la sucesión"),
+           oblig=e(faq_map["¿Es obligatorio hacer la sucesión?"]), tarda=e(faq_map["¿Cuánto tarda una sucesión?"]),
+           tracto=e(faq_map["¿Qué es el tracto abreviado?"]), vender=e(faq_map["¿Se puede vender una casa heredada sin hacer la sucesión?"]),
+           band1=cta_band("Pedí un presupuesto para tu sucesión", "Contanos qué bienes hay y cuántos herederos son. Te respondemos con un presupuesto por escrito.",
+                          btn_pres + consultar("Sucesión", "Usar el formulario", "outline"), dark=True),
+           band2=cta_band("¿Querés iniciar la sucesión?", "Te acompañamos en cada etapa, con explicaciones claras y seguimiento personalizado.",
+                          btn(url_servicio("sucesiones"), "Abogado de sucesiones", "accent") + btn_wa("Hablar con un abogado", "outline")),
+           faq=faq_block(g["faqs"], "Dudas frecuentes sobre <em>sucesiones</em>"),
+           form=form_block("Sucesión", "Pedí un <em>presupuesto</em>",
+                           "Contanos brevemente el caso: qué bienes hay y cuántos herederos son. Te respondemos con un presupuesto por escrito."))
+    write(p, body)
+
+
 def build_sitemap():
     prio = {"/": "1.0"}
     lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
@@ -1248,6 +1498,8 @@ def main():
     build_blog()
     for a in ARTICULOS:
         build_articulo(a)
+    build_calculadora()
+    build_guia_sucesion()
     build_simple()
     build_sitemap()
     print("Generadas {} páginas en {}".format(len(PAGES), os.path.normpath(OUT)))
