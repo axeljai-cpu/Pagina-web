@@ -4,7 +4,7 @@
 
   var BRAND = window.__BRAND__ = window.__BRAND__ || {
     email: 'info@estudiojcs.com.ar',
-    whatsapp: '5491151785782'
+    whatsapp: '5491149734492'
   };
   var doc = document;
 

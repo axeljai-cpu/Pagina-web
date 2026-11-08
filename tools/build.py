@@ -35,7 +35,8 @@ ESTUDIO = {
     "horario": "Lunes a viernes de 9:00 a 17:00 hs.",
     "direccion": "Lavelle y Talcahuano",
     "ciudad": "Ciudad Autónoma de Buenos Aires",
-    "whatsapp": "5491151785782",
+    "whatsapp": "5491149734492",
+    "whatsapp_display": "+54 9 11 4973-4492",
     "whatsapp_texto": "Hola, quisiera realizar una consulta jurídica.",
 }
 # ID de Google Tag Manager (por ejemplo "GTM-XXXXXXX"). Vacío = sin analítica.
@@ -360,7 +361,7 @@ def footer(p):
         <li>{tels}</li>
         <li><a href="mailto:{email}" data-track="email">{email}</a></li>
         <li>{horario}</li>
-        <li><a href="{wa}" target="_blank" rel="noopener" data-track="whatsapp">WhatsApp</a></li>
+        <li>Solo WhatsApp:<br><a href="{wa}" target="_blank" rel="noopener" data-track="whatsapp">{wa_num}</a></li>
       </ul>
     </div>
     <div>
@@ -388,7 +389,7 @@ def footer(p):
         c1=btn("/contacto/" if p.get("noform") else "#contacto", "Consultar ahora", "light"), c2=btn_wa("Hablar con un abogado"), logo=logo("logo--light"),
         tels=tel_links(), email=ESTUDIO["email"], horario=e(ESTUDIO["horario"]), wa=WA, areas=areas,
         servicios=servicios, cats="".join('<li><a href="{}">{}</a></li>'.format(url_categoria(k), e(c["nombre"])) for k, c in CATEGORIAS.items()),
-        year=date.today().year, wa_icon=WA_ICON, mapa=MAPA, dir=e(ESTUDIO["direccion"]), ciudad=e(ESTUDIO["ciudad"]),
+        year=date.today().year, wa_icon=WA_ICON, mapa=MAPA, dir=e(ESTUDIO["direccion"]), ciudad=e(ESTUDIO["ciudad"]), wa_num=ESTUDIO["whatsapp_display"],
     )
 
 
@@ -427,10 +428,12 @@ def hero_aside():
         <p class="quick-card__title">Hablá con un abogado</p>
         <ul>
           <li>{phone}<span>{tels}</span></li>
+          <li>{wai}<span><a href="{wa_url}" target="_blank" rel="noopener" data-track="whatsapp">{wa_num}</a><br>Solo WhatsApp</span></li>
           <li>{clock}<span>{horario}</span></li>
         </ul>
         {wa}
       </aside>""".format(phone=PHONE_ICON, tels=tel_links(), clock=CLOCK_ICON, horario=e(ESTUDIO["horario"]),
+                         wai=WA_ICON, wa_url=WA, wa_num=ESTUDIO["whatsapp_display"],
                          wa=btn_wa("Escribinos por WhatsApp", "wa btn--block"))
 
 
@@ -481,6 +484,7 @@ def form_block(motivo=None, titulo="Contanos tu caso", lead="Completá el formul
       <p class="lead reveal">{lead}</p>
       <ul class="contact__list reveal">
         <li>{phone}<div><span class="label">Teléfonos</span>{tels}</div></li>
+        <li>{wai}<div><span class="label">Solo WhatsApp</span><a href="{wa_url}" target="_blank" rel="noopener" data-track="whatsapp">{wa_num}</a></div></li>
         <li>{mail}<div><span class="label">Email</span><a href="mailto:{email}" data-track="email">{email}</a></div></li>
         <li>{clock}<div><span class="label">Horario</span><span>{horario}</span></div></li>
         <li>{pin}<div><span class="label">Dirección</span><a href="{mapa}" target="_blank" rel="noopener">{dir}, CABA</a></div></li>
@@ -514,7 +518,7 @@ def form_block(motivo=None, titulo="Contanos tu caso", lead="Completá el formul
 </section>""".format(h=h_tag, titulo=titulo, lead=e(lead), phone=PHONE_ICON, tels=tel_links(), mail=MAIL_ICON,
                      email=ESTUDIO["email"], clock=CLOCK_ICON, horario=e(ESTUDIO["horario"]),
                      wa=btn_wa("Escribinos por WhatsApp"), opts="".join(opts), arrow=ARROW, wa_url=WA, wa_icon=WA_ICON,
-                     pin=PIN_ICON, mapa=MAPA, dir=e(ESTUDIO["direccion"]))
+                     pin=PIN_ICON, mapa=MAPA, dir=e(ESTUDIO["direccion"]), wai=WA_ICON, wa_num=ESTUDIO["whatsapp_display"])
 
 
 def service_card(slug, num=None):
@@ -1029,7 +1033,7 @@ def build_contacto():
     <h1>Hablemos de <em>tu caso.</em></h1>
     <p class="lead">Elegí el canal que te resulte más cómodo. Un abogado del estudio va a revisar tu consulta.</p>
     <ul class="channels">
-      <li><a href="{wa}" target="_blank" rel="noopener" data-track="whatsapp">{wai}<span><strong>WhatsApp</strong>{p1}</span></a></li>
+      <li><a href="{wa}" target="_blank" rel="noopener" data-track="whatsapp">{wai}<span><strong>Solo WhatsApp</strong>{wa_num}</span></a></li>
       <li><a href="tel:{t1}" data-track="telefono">{ph}<span><strong>Teléfono</strong>{p1}</span></a></li>
       <li><a href="tel:{t2}" data-track="telefono">{ph}<span><strong>Teléfono</strong>{p2}</span></a></li>
       <li><a href="mailto:{email}" data-track="email">{mail}<span><strong>Email</strong>{email}</span></a></li>
@@ -1038,7 +1042,7 @@ def build_contacto():
 </section>
 {form}
 {faq}
-""".format(bc=breadcrumb(crumbs), wa=WA, wai=WA_ICON, p1=ESTUDIO["telefonos"][0][0], t1=ESTUDIO["telefonos"][0][1],
+""".format(bc=breadcrumb(crumbs), wa=WA, wai=WA_ICON, wa_num=ESTUDIO["whatsapp_display"], p1=ESTUDIO["telefonos"][0][0], t1=ESTUDIO["telefonos"][0][1],
            p2=ESTUDIO["telefonos"][1][0], t2=ESTUDIO["telefonos"][1][1], ph=PHONE_ICON, email=ESTUDIO["email"], mail=MAIL_ICON,
            form=form_block(titulo="Envianos tu consulta", h_tag="h2"), faq=faq_block(faqs, "Antes de escribirnos"))
     write(p, body)
