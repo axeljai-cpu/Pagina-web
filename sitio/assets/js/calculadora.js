@@ -135,8 +135,15 @@
     var inicioAnio = new Date(egreso.getFullYear(), 0, 1);
     var desdeAnio = ingreso > inicioAnio ? ingreso : inicioAnio;
     var diasAnio = daysBetween(desdeAnio, egreso) + 1;
-    var diasVac = Math.max(0, Math.round((diasAnuales * diasAnio / 365 - tomadas) * 10) / 10);
+    /* Mínimo de 14 días de vacaciones (criterio indicado por el estudio) */
+    var VAC_MIN = 14;
+    var diasProp = Math.max(VAC_MIN, diasAnuales * diasAnio / 365);
+    var diasVac = Math.max(0, Math.round((diasProp - tomadas) * 10) / 10);
     var vacaciones = sueldo / 25 * diasVac;
+    var minAplicado = diasAnuales * diasAnio / 365 < VAC_MIN;
+    var vacNota = minAplicado
+      ? (tomadas ? ' (mínimo de 14, menos ' + tomadas + ' ya tomados)' : ' (mínimo de 14)')
+      : (tomadas ? ' (descontados ' + tomadas + ' ya tomados)' : '');
 
     var rows = [
       { label: 'Indemnización por antigüedad', note: 'Art. 245 LCT · ' + plural(Math.max(anios245, 1), 'año', 'años') + (topeAplicado ? ' · con tope de convenio' : ''), amount: indemnizacion },
@@ -146,7 +153,7 @@
       { label: 'SAC sobre integración', note: 'Aguinaldo proporcional a la integración', amount: integracion / 12 },
       { label: 'Días trabajados del mes', note: plural(diasMes, 'día', 'días'), amount: trabajados },
       { label: 'SAC proporcional', note: 'Aguinaldo del semestre · ' + plural(diasSem, 'día', 'días'), amount: sac },
-      { label: 'Vacaciones no gozadas', note: 'Arts. 150 y 156 LCT · ' + diasVac.toString().replace('.', ',') + ' días', amount: vacaciones },
+      { label: 'Vacaciones no gozadas', note: 'Arts. 150 y 156 LCT · ' + diasVac.toString().replace('.', ',') + ' días' + vacNota, amount: vacaciones },
       { label: 'SAC sobre vacaciones', note: 'Aguinaldo proporcional a las vacaciones', amount: vacaciones / 12 }
     ];
     var total = rows.reduce(function (s, r) { return s + r.amount; }, 0);

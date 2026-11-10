@@ -23,7 +23,7 @@ CALCULADORA = {
         ("Integración del mes de despido (art. 233 LCT)",
          "Si el despido sin preaviso no coincide con el último día del mes, corresponden los salarios de los días que faltan hasta fin de mes."),
         ("Días trabajados, aguinaldo y vacaciones",
-         "Se suman los días trabajados del mes, el aguinaldo (SAC) proporcional del semestre y las vacaciones no gozadas proporcionales al tiempo trabajado en el año, con su aguinaldo."),
+         "Se suman los días trabajados del mes, el aguinaldo (SAC) proporcional del semestre y las vacaciones no gozadas del año, con un mínimo de 14 días, y su aguinaldo."),
     ],
     "cambios": [
         "El período de prueba pasó a ser, en general, de seis meses. Durante ese período no corresponde indemnización por antigüedad, aunque sí el preaviso de 15 días.",
