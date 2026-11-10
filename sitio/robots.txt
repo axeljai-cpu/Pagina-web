@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /gracias/
+Disallow: /enviar.php
+
+Sitemap: https://estudiojcs.com.ar/sitemap.xml
